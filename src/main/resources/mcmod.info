@@ -1,16 +1,16 @@
 [
 {
-  "modid": "weepingangels",
-  "name": "Weeping Angels",
-  "description": "Weeping. Freaking. Angels.",
+  "modid": "href",
+  "name": "HREF",
+  "description": "Hexadecimal Ratios and Ender Frequencies",
   "version": "${version}",
   "mcversion": "${mcversion}",
   "url": "",
   "updateUrl": "",
-  "authors": ["CountryGamer"],
+  "authors": ["TheTemportalist"],
   "credits": "",
   "logoFile": "",
   "screenshots": [],
-  "dependencies": ["cgo"]
+  "dependencies": ["origin"]
 }
 ]
