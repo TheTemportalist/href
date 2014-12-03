@@ -1,6 +1,11 @@
 *.class
 *.log
 
+# Package Files #
+*.jar
+*.war
+*.ear
+
 # sbt specific
 .cache/
 .history/
@@ -15,3 +20,29 @@ project/plugins/project/
 # Scala-IDE specific
 .scala_dependencies
 .worksheet
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+.gradle
+build
+*.iml
+*.ipr
+*.iws
+devlog.txt
+eclipse
+gradle
+gradle.properties
+gradlew
+gradlew.bat
+output
+run
+run_server
+test
