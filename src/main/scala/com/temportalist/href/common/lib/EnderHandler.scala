@@ -21,6 +21,11 @@ object EnderHandler {
 		this.inventories.get(freq)
 	}
 
+	def addTile(freq: Frequency, pos: BlockPos): Unit = {
+
+	}
+
+	/*
 	def checkTiles(): Unit = {
 		val iter: util.Iterator[Frequency] = this.tiles.keySet().iterator()
 		var freq: Frequency = null
@@ -52,6 +57,7 @@ object EnderHandler {
 			this.tiles.get(freq).remove(coord)
 		else false
 	}
+	*/
 
 	def sync(inv1: Object, ender: EnderInventory, fromInv: Boolean): Boolean = {
 		inv1 match {

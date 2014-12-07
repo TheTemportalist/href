@@ -2,6 +2,8 @@ package com.temportalist.href.client.render
 
 import com.temportalist.href.client.render.model.ModelTransmitter
 import com.temportalist.href.common.Href
+import com.temportalist.href.common.lib.DyeButton
+import com.temportalist.href.common.tile.TETransmitter
 import com.temportalist.origin.wrapper.client.render.TERenderer
 import com.temportalist.origin.wrapper.client.render.model.ModelWrapper
 import net.minecraft.tileentity.TileEntity
@@ -22,6 +24,7 @@ class RenderTransmitter() extends TERenderer(
 	override protected def render(tileEntity: TileEntity, partialTicks: Float, f5: Float): Unit = {
 		val meta: Int = tileEntity.getBlockMetadata
 
+		GL11.glPushMatrix()
 		meta match {
 			case 0 =>
 			case 1 =>
@@ -38,6 +41,21 @@ class RenderTransmitter() extends TERenderer(
 		}
 
 		new ModelTransmitter().renderModel(f5)
+		GL11.glPopMatrix()
+
+		GL11.glTranslated(-0.5, -0.5, -0.5)
+		GL11.glDisable(GL11.GL_LIGHTING)
+		tileEntity match {
+			case trans: TETransmitter =>
+				val buttons: Array[DyeButton] = trans.getButtons(meta)
+				for (i <- 0 until buttons.length) {
+					GL11.glPushMatrix()
+					buttons(i).draw(trans.getFrequency().getColor(i), meta)
+					GL11.glPopMatrix()
+				}
+			case _ =>
+		}
+		GL11.glEnable(GL11.GL_LIGHTING)
 
 	}
 
