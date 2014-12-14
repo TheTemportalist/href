@@ -13,7 +13,7 @@ import net.minecraftforge.fluids._
  */
 class EnderInventory(freq: Frequency) extends IInventory with IFluidHandler {
 
-	private val items: Array[ItemStack] = new Array[ItemStack](freq.getSize())
+	private val items: Array[ItemStack] = new Array[ItemStack](0)
 
 	override def getSizeInventory: Int = {
 		this.items.length
@@ -74,7 +74,7 @@ class EnderInventory(freq: Frequency) extends IInventory with IFluidHandler {
 	override def isItemValidForSlot(p_94041_1_ : Int, p_94041_2_ : ItemStack): Boolean = ???
 
 	override def markDirty(): Unit = {
-		EnderHandler.updateTiles(this.freq)
+		//EnderHandler.updateTiles(this.freq)
 	}
 
 	// todo nbt things

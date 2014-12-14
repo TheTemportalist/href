@@ -226,13 +226,13 @@ class DyeButton(val index: Int, min: Vector3, max: Vector3) {
 		this.addVecUV(this.verticies(5), uv(1), uv(3))
 	}
 
-	// todo move to Vector3
+	// todo move to Vector3 done
 	@SideOnly(Side.CLIENT)
 	def addVecUV(vec: Vector3, u: Double, v: Double): Unit = {
 		Tessellator.instance.addVertexWithUV(vec.x, vec.y, vec.z, u, v)
 	}
 
-	// todo move these 3 color funcs to Vector3
+	// todo move these 3: done 'Generic'
 
 	def getR(color: Int): Int = ((0xff000000 | color) >> 16) & 0xFF
 

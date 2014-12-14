@@ -13,14 +13,31 @@ class Frequency(private var colors: Array[Int]) {
 		this(Array[Int](a, b, c, d))
 	}
 
+	def this(tag: NBTTagCompound) {
+		this(0, 0, 0, 0)
+		this.fromNBT(tag)
+	}
+
 	override def equals(obj: scala.Any): Boolean = {
 		obj match {
 			case freq: Frequency =>
-				return java.util.Arrays.equals(this.colors, freq.colors)
+				if (this.colors.length == freq.colors.length) {
+					for (i <- 0 until this.colors.length) {
+						if (this.colors(i) != freq.colors(i)) return false
+					}
+					return true
+				}
 			case _ =>
 
 		}
 		false
+	}
+
+	override def hashCode(): Int = {
+		var hash: Int = 1
+		for (i <- 0 until this.colors.length)
+			hash = hash * 31 + this.colors(i).hashCode()
+		hash
 	}
 
 	def toNBT(tagCom: NBTTagCompound): Unit = {
@@ -36,5 +53,7 @@ class Frequency(private var colors: Array[Int]) {
 	def setColor(i: Int, color: Int): Unit = {
 		this.colors(i) = color
 	}
+
+	def copy(): Frequency = new Frequency(this.colors)
 
 }

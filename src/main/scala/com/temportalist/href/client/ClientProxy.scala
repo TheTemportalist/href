@@ -2,6 +2,7 @@ package com.temportalist.href.client
 
 import java.util
 
+import com.temportalist.href.client.gui.GuiTransmitter
 import com.temportalist.href.client.render.{ItemTransmitterRenderer, RenderTransmitter}
 import com.temportalist.href.common.CommonProxy
 import com.temportalist.href.common.init.HrefBlocks
@@ -35,7 +36,16 @@ class ClientProxy() extends CommonProxy with IModGuiFactory {
 	}
 
 	override def getClientElement(ID: Int, player: EntityPlayer, world: World, x: Int, y: Int,
-			z: Int, tileEntity: TileEntity): AnyRef = null
+			z: Int, tileEntity: TileEntity): AnyRef = {
+		tileEntity match {
+			case null =>
+				null
+			case te: TETransmitter =>
+				new GuiTransmitter(player, te)
+			case _ =>
+				null
+		}
+	}
 
 	override def initialize(minecraftInstance: Minecraft): Unit = {}
 

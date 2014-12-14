@@ -4,26 +4,26 @@ import java.util
 
 import codechicken.lib.raytracer.{IndexedCuboid6, RayTracer}
 import codechicken.lib.vec.{BlockCoord, Cuboid6, Vector3}
-import com.temportalist.href.api.IDye
 import com.temportalist.href.common.Href
-import com.temportalist.href.common.lib.{BlockPos, BoundsHelper, EnderHandler}
+import com.temportalist.href.common.lib._
 import com.temportalist.href.common.tile.TETransmitter
 import com.temportalist.origin.library.common.helpers.RegisterHelper
-import com.temportalist.origin.library.common.lib.vec.Vector3b
+import com.temportalist.origin.library.common.lib.LogHelper
+import com.temportalist.origin.library.common.lib.vec.Vector3O
 import com.temportalist.origin.wrapper.common.block.BlockWrapperTE
 import cpw.mods.fml.common.eventhandler.SubscribeEvent
 import cpw.mods.fml.relauncher.{Side, SideOnly}
-import net.minecraft.block.Block
 import net.minecraft.block.material.Material
 import net.minecraft.entity.player.EntityPlayer
 import net.minecraft.entity.{Entity, EntityLivingBase}
+import net.minecraft.inventory.IInventory
 import net.minecraft.item.ItemStack
 import net.minecraft.tileentity.TileEntity
 import net.minecraft.util.{AxisAlignedBB, MovingObjectPosition, Vec3}
 import net.minecraft.world.World
 import net.minecraftforge.client.event.DrawBlockHighlightEvent
 import net.minecraftforge.common.util.ForgeDirection
-import net.minecraftforge.oredict.OreDictionary
+import net.minecraftforge.fluids.IFluidHandler
 
 /**
  *
@@ -35,31 +35,31 @@ class BlockTransmitter() extends BlockWrapperTE(Material.rock, Href.modid, "Tran
 
 	RegisterHelper.registerHandler(this, null)
 
-	def getVectorOn(x: Int, y: Int, z: Int, meta: Int): Vector3b = {
-		Vector3b.from(x, y, z, ForgeDirection.getOrientation(meta))
-	}
-
-	override def onBlockPlacedBy(world: World, x: Int, y: Int, z: Int,
-			entity: EntityLivingBase, itemStack: ItemStack): Unit = {
-		world.getTileEntity(x, y, z).asInstanceOf[TETransmitter].setAttributes(itemStack)
+	def getVectorOn(x: Int, y: Int, z: Int, meta: Int): Vector3O = {
+		Vector3O.from(x, y, z, ForgeDirection.getOrientation(meta))
 	}
 
 	override def onBlockPlaced(world: World, x: Int, y: Int,
 			z: Int, side: Int, hitX: Float, hitY: Float,
 			hitZ: Float, meta: Int): Int = {
-		// return the opposite side (this's mouth is facing the block it was placed on)
 		ForgeDirection.getOrientation(side).getOpposite.ordinal()
 	}
 
-	override def onPostBlockPlaced(world: World, x: Int, y: Int, z: Int, meta: Int): Unit = {
-		val tile: TileEntity = world.getTileEntity(x, y, z)
-		if (tile != null) tile match {
-			case trans: TETransmitter =>
-				trans.setAttachedInv(
-					ForgeDirection.getOrientation(meta), this.getVectorOn(x, y, z, meta)
+	override def onBlockPlacedBy(world: World, x: Int, y: Int, z: Int,
+			entity: EntityLivingBase, itemStack: ItemStack): Unit = {
+		if (entity.isSneaking) {
+			val te: TileEntity = this.getVectorOn(x, y, z, world.getBlockMetadata(x, y, z))
+					.getTile(world)
+			if (te == null || (!te.isInstanceOf[IInventory] && !te.isInstanceOf[IFluidHandler])) {
+				world.setBlockMetadataWithNotify(
+					x, y, z,
+					ForgeDirection.getOrientation(
+						world.getBlockMetadata(x, y, z)
+					).getOpposite.ordinal(), 3
 				)
-			case _ =>
+			}
 		}
+		world.getTileEntity(x, y, z).asInstanceOf[TETransmitter].setAttributes(itemStack)
 	}
 
 	override def onBlockPreDestroy(
@@ -68,31 +68,13 @@ class BlockTransmitter() extends BlockWrapperTE(Material.rock, Href.modid, "Tran
 		val te: TileEntity = world.getTileEntity(x, y, z)
 		te match {
 			case transmitter: TETransmitter =>
-				EnderHandler.removeTile(transmitter.getFrequency(),
-					new BlockPos(new Vector3b(x, y, z), world.provider.dimensionId))
+				if (!world.isRemote)
+					EnderHandler.removeTile(transmitter.getFrequency(), new BlockPos(transmitter))
 			case _ =>
 		}
 	}
 
-	override def onNeighborBlockChange(world: World, x: Int, y: Int, z: Int,
-			block: Block): Unit = {
-		super.onNeighborBlockChange(world, x, y, z, block)
-		val meta: Int = world.getBlockMetadata(x, y, z)
-		if (!this.getVectorOn(x, y, z, meta).getBlock(world).getMaterial.isSolid) {
-
-			this.dropBlockAsItem(world, x, y, z, meta, 0)
-			world.setBlockToAir(x, y, z)
-		}
-	}
-
-	override def dropBlockAsItem(world: World, x: Int, y: Int, z: Int,
-			itemStack: ItemStack): Unit = {
-		world.getTileEntity(x, y, z) match {
-			case transmitter: TETransmitter =>
-				transmitter.addAttributes(itemStack)
-			case _ =>
-		}
-	}
+	override def hasTileEntityDrops(metadata: Int): Boolean = true
 
 	override def isOpaqueCube: Boolean = false
 
@@ -222,47 +204,36 @@ class BlockTransmitter() extends BlockWrapperTE(Material.rock, Href.modid, "Tran
 
 	override def onBlockActivated(world: World, x: Int, y: Int, z: Int, player: EntityPlayer,
 			side: Int, offsetX: Float, offsetY: Float, offsetZ: Float): Boolean = {
+		val te: TileEntity = world.getTileEntity(x, y, z)
+		if (!player.isSneaking && side == world.getBlockMetadata(x, y, z)) {
+			te match {
+				case trans: TETransmitter =>
+					LogHelper.info(Href.modname, "Open gui")
+					player.openGui(Href.modid, 0, world, x, y, z)
+				case _ =>
+			}
+
+			return true
+		}
+
 		if (world.isRemote) return true
 
 		val mop: MovingObjectPosition = RayTracer.retraceBlock(world, player, x, y, z)
-		val te: TileEntity = world.getTileEntity(x, y, z)
 
 		if (mop == null || te == null || !te.isInstanceOf[TETransmitter]) return false
 
 		mop.subHit match {
-			case 0 => // normal block
-				if (player.isSneaking) false
-
-				false // todo
 			case 1 | 2 | 3 | 4 => // button
 				val itemStack: ItemStack = player.getCurrentEquippedItem
 				if (itemStack != null) {
-					te.asInstanceOf[TETransmitter].setButtonColor(
-						mop.subHit - 1, this.getDyeColor(itemStack)
-					)
+					val color: Int = Dyes.getDyeColor(itemStack)
+					if (color >= 0)
+						te.asInstanceOf[TETransmitter].setButtonColor(
+							mop.subHit - 1, color
+						)
 				}
 				true // makes sure that the only action on the button is to change color
 			case _ => false
-		}
-	}
-
-	def getDyeColor(itemStack: ItemStack): Int = {
-		val oreIDs: Array[Int] = OreDictionary.getOreIDs(itemStack)
-		var name: String = null
-		for (i <- 0 until oreIDs.length) {
-			name = OreDictionary.getOreName(oreIDs(i))
-			if (name.startsWith("dye")) {
-				return this.getDyeColor(itemStack, name)
-			}
-		}
-		0xFFFFFF // white
-	}
-
-	def getDyeColor(itemStack: ItemStack, oreDictName: String): Int = {
-		oreDictName match {
-			case "" =>
-			case dye: IDye =>
-				dye.getColor(itemStack)
 		}
 	}
 
